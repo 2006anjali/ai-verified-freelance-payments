@@ -1,33 +1,52 @@
-import { useState } from "react";
-import "./App.css";
+import { useState } from 'react'
+import { connectWallet } from './stellar/wallet'
+import './App.css'
 
 function App() {
-  const [role, setRole] = useState("freelancer");
+  const [wallet, setWallet] = useState(null)
+  const [connecting, setConnecting] = useState(false)
+  const [error, setError] = useState('')
+
+  async function handleConnect() {
+    setConnecting(true)
+    setError('')
+
+    try {
+      const result = await connectWallet()
+      setWallet(result)
+    } catch (err) {
+      setError(err.message || 'Unable to connect wallet')
+    } finally {
+      setConnecting(false)
+    }
+  }
 
   return (
     <div className="app">
-      <nav className="navbar">
-        <div className="logo">
-          <span>✦</span> StellarWork
-        </div>
+      <header className="navbar">
+        <div className="logo">✦ StellarWork</div>
 
-        <div className="nav-links">
+        <nav>
           <a href="#jobs">Jobs</a>
           <a href="#how">How it works</a>
           <a href="#about">About</a>
-        </div>
+        </nav>
 
-        <button className="wallet-btn">
-          Connect Wallet
+        <button className="wallet-btn" onClick={handleConnect}>
+          {connecting
+            ? 'Connecting...'
+            : wallet
+              ? `${wallet.address.slice(0, 6)}...${wallet.address.slice(-4)}`
+              : 'Connect Wallet'}
         </button>
-      </nav>
+      </header>
+
+      {error && <div className="wallet-error">{error}</div>}
 
       <main>
         <section className="hero">
           <div className="hero-content">
-            <div className="badge">
-              ✦ Built on Stellar
-            </div>
+            <span className="eyebrow">✦ Built on Stellar</span>
 
             <h1>
               Freelance work.
@@ -36,17 +55,17 @@ function App() {
             </h1>
 
             <p>
-              AI-verified freelance work with secure Stellar
-              payments. Complete jobs, verify your work, and
-              get paid without unnecessary intermediaries.
+              AI-verified freelance work with secure Stellar payments.
+              Complete jobs, verify your work, and get paid without
+              unnecessary intermediaries.
             </p>
 
             <div className="hero-actions">
-              <button className="primary-btn">
+              <a href="#jobs" className="primary-btn">
                 Find Work →
-              </button>
+              </a>
 
-              <button className="secondary-btn">
+              <button className="secondary-btn" onClick={handleConnect}>
                 Post a Job
               </button>
             </div>
@@ -54,23 +73,23 @@ function App() {
             <div className="stats">
               <div>
                 <strong>100%</strong>
-                <small>On-chain payments</small>
+                <span>On-chain payments</span>
               </div>
 
               <div>
                 <strong>AI</strong>
-                <small>Work verification</small>
+                <span>Work verification</span>
               </div>
 
               <div>
                 <strong>24/7</strong>
-                <small>Payment escrow</small>
+                <span>Payment escrow</span>
               </div>
             </div>
           </div>
 
-          <div className="hero-card">
-            <div className="card-header">
+          <div className="job-card">
+            <div className="card-top">
               <span>Active Job</span>
               <span className="status">● In Progress</span>
             </div>
@@ -78,74 +97,65 @@ function App() {
             <h3>Build a React Dashboard</h3>
 
             <p>
-              Create a responsive dashboard for a
-              blockchain application.
+              Create a responsive dashboard for a blockchain application.
             </p>
 
-            <div className="job-info">
+            <div className="job-details">
               <div>
-                <small>Budget</small>
+                <span>Budget</span>
                 <strong>250 XLM</strong>
               </div>
 
               <div>
-                <small>Deadline</small>
+                <span>Deadline</span>
                 <strong>3 days</strong>
               </div>
             </div>
 
-            <div className="verification">
-              <span>✓</span>
-              AI verification enabled
-            </div>
+            <div className="verified">✓ AI verification enabled</div>
 
-            <button className="card-btn">
-              View Job
-            </button>
+            <button className="view-btn">View Job</button>
           </div>
         </section>
 
         <section id="jobs" className="jobs-section">
-          <div className="section-heading">
-            <div>
-              <span className="eyebrow">WORK MARKETPLACE</span>
-              <h2>Find verified opportunities</h2>
-            </div>
+          <span className="section-label">WORK MARKETPLACE</span>
 
-            <button className="outline-btn">
-              View all jobs →
-            </button>
+          <div className="section-heading">
+            <h2>Find verified opportunities</h2>
+            <a href="#jobs">View all jobs →</a>
           </div>
 
-          <div className="job-grid">
+          <div className="jobs-grid">
             <JobCard
-              title="Build a React Dashboard"
               category="Frontend"
+              title="Build a React Dashboard"
               budget="250 XLM"
-              time="3 days"
+              deadline="3 days"
             />
 
             <JobCard
-              title="Smart Contract Integration"
               category="Blockchain"
+              title="Smart Contract Integration"
               budget="500 XLM"
-              time="5 days"
+              deadline="5 days"
             />
 
             <JobCard
-              title="Landing Page Design"
               category="Design"
+              title="Landing Page Design"
               budget="180 XLM"
-              time="2 days"
+              deadline="2 days"
             />
           </div>
         </section>
 
-        <section id="how" className="how-section">
-          <span className="eyebrow">SIMPLE PROCESS</span>
+        <section id="how" className="process-section">
+          <span className="section-label">SIMPLE PROCESS</span>
+
           <h2>Work. Verify. Get paid.</h2>
 
-          <div className="steps">
+          <div className="process-grid">
             <Step
               number="01"
               title="Find or post a job"
@@ -172,77 +182,58 @@ function App() {
           </div>
         </section>
 
-        <section className="role-section">
-          <span className="eyebrow">GET STARTED</span>
+        <section className="cta-section">
+          <span className="section-label">GET STARTED</span>
           <h2>What are you looking for?</h2>
 
-          <div className="role-switch">
-            <button
-              className={role === "freelancer" ? "active" : ""}
-              onClick={() => setRole("freelancer")}
-            >
-              I'm a Freelancer
-            </button>
-
-            <button
-              className={role === "client" ? "active" : ""}
-              onClick={() => setRole("client")}
-            >
-              I'm a Client
-            </button>
+          <div className="role-buttons">
+            <button onClick={handleConnect}>I'm a Freelancer</button>
+            <button onClick={handleConnect}>I'm a Client</button>
           </div>
 
           <p>
-            {role === "freelancer"
-              ? "Find verified jobs, complete work and receive secure Stellar payments."
-              : "Post jobs, fund escrow and pay freelancers after successful verification."}
+            Find verified jobs, complete work and receive secure Stellar
+            payments.
           </p>
         </section>
       </main>
 
-      <footer>
-        <div className="logo">
-          <span>✦</span> StellarWork
-        </div>
-
-        <p>
-          AI-verified freelance payments powered by Stellar.
-        </p>
+      <footer id="about">
+        <div className="logo">✦ StellarWork</div>
+        <p>AI-verified freelance payments powered by Stellar.</p>
       </footer>
     </div>
-  );
+  )
 }
 
-function JobCard({ title, category, budget, time }) {
+function JobCard({ category, title, budget, deadline }) {
   return (
-    <div className="job-card">
-      <div className="job-top">
-        <span className="category">{category}</span>
-        <span className="verified">✓ Verified</span>
+    <article className="market-card">
+      <div className="category">
+        {category}
+        <span>✓ Verified</span>
       </div>
 
       <h3>{title}</h3>
 
-      <div className="job-details">
+      <div className="market-meta">
         <span>💰 {budget}</span>
-        <span>◷ {time}</span>
+        <span>◷ {deadline}</span>
       </div>
 
-      <button className="view-btn">
-        View details →
-      </button>
-    </div>
-  );
+      <button>View details →</button>
+    </article>
+  )
 }
 
 function Step({ number, title, text }) {
   return (
-    <div className="step">
-      <span className="step-number">{number}</span>
+    <article className="step">
+      <span>{number}</span>
       <h3>{title}</h3>
       <p>{text}</p>
-    </div>
-  );
+    </article>
+  )
 }
 
-export default App;
+export default App
