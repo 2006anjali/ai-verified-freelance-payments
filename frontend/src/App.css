@@ -1,0 +1,388 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, Arial, sans-serif;
+  background: #f7f8fc;
+  color: #111827;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+.app {
+  min-height: 100vh;
+}
+
+.navbar {
+  height: 72px;
+  padding: 0 7%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.logo {
+  font-size: 21px;
+  font-weight: 800;
+}
+
+.logo span {
+  color: #5b5cf0;
+  margin-right: 7px;
+}
+
+.nav-links {
+  display: flex;
+  gap: 32px;
+}
+
+.nav-links a {
+  color: #4b5563;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.wallet-btn,
+.primary-btn {
+  border: none;
+  background: #5b5cf0;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 9px;
+  font-weight: 700;
+}
+
+.hero {
+  padding: 90px 8%;
+  display: flex;
+  gap: 70px;
+  align-items: center;
+  background: linear-gradient(135deg, #f8f8ff, #eef0ff);
+}
+
+.hero-content {
+  flex: 1;
+}
+
+.badge,
+.eyebrow {
+  color: #5b5cf0;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 8px 13px;
+  background: #e8e8ff;
+  border-radius: 20px;
+  margin-bottom: 20px;
+}
+
+.hero h1 {
+  font-size: clamp(42px, 5vw, 70px);
+  line-height: 1.05;
+  margin: 0 0 24px;
+  letter-spacing: -3px;
+}
+
+.hero h1 span {
+  color: #5b5cf0;
+}
+
+.hero-content > p {
+  max-width: 600px;
+  font-size: 17px;
+  line-height: 1.7;
+  color: #5b6472;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 14px;
+  margin-top: 30px;
+}
+
+.primary-btn {
+  padding: 14px 24px;
+}
+
+.secondary-btn,
+.outline-btn {
+  background: white;
+  border: 1px solid #d7d9e2;
+  padding: 13px 21px;
+  border-radius: 9px;
+  font-weight: 700;
+}
+
+.stats {
+  display: flex;
+  gap: 45px;
+  margin-top: 45px;
+}
+
+.stats div {
+  display: flex;
+  flex-direction: column;
+}
+
+.stats strong {
+  font-size: 20px;
+}
+
+.stats small {
+  margin-top: 5px;
+  color: #6b7280;
+}
+
+.hero-card {
+  width: 390px;
+  padding: 28px;
+  background: white;
+  border: 1px solid #e3e5ed;
+  border-radius: 18px;
+  box-shadow: 0 20px 50px rgba(30, 35, 80, 0.1);
+}
+
+.card-header,
+.job-top,
+.job-info,
+.job-details {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-header {
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.status {
+  color: #16a34a;
+}
+
+.hero-card h3 {
+  margin: 28px 0 10px;
+  font-size: 21px;
+}
+
+.hero-card p {
+  color: #6b7280;
+  line-height: 1.6;
+}
+
+.job-info {
+  margin: 25px 0;
+}
+
+.job-info div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.job-info small {
+  color: #777;
+}
+
+.verification {
+  padding: 12px;
+  background: #f0fdf4;
+  color: #15803d;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.verification span {
+  margin-right: 8px;
+}
+
+.card-btn,
+.view-btn {
+  width: 100%;
+  margin-top: 18px;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background: #111827;
+  color: white;
+  font-weight: 700;
+}
+
+.jobs-section,
+.how-section,
+.role-section {
+  padding: 80px 8%;
+}
+
+.section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  margin-bottom: 35px;
+}
+
+h2 {
+  font-size: 36px;
+  margin: 10px 0 0;
+  letter-spacing: -1px;
+}
+
+.job-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.job-card {
+  padding: 25px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+}
+
+.category {
+  color: #5b5cf0;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.verified {
+  color: #16a34a;
+  font-size: 12px;
+}
+
+.job-card h3 {
+  margin: 25px 0;
+  font-size: 19px;
+}
+
+.job-details {
+  color: #68707d;
+  font-size: 14px;
+}
+
+.view-btn {
+  background: #f1f2f7;
+  color: #111827;
+}
+
+.how-section {
+  background: #111827;
+  color: white;
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 30px;
+  margin-top: 45px;
+}
+
+.step-number {
+  color: #8183ff;
+  font-weight: 800;
+}
+
+.step h3 {
+  margin-top: 25px;
+}
+
+.step p {
+  color: #aeb4c0;
+  line-height: 1.6;
+}
+
+.role-section {
+  text-align: center;
+}
+
+.role-switch {
+  display: inline-flex;
+  margin-top: 35px;
+  background: #e9eaf0;
+  padding: 5px;
+  border-radius: 10px;
+}
+
+.role-switch button {
+  border: none;
+  padding: 12px 22px;
+  border-radius: 7px;
+  background: transparent;
+}
+
+.role-switch .active {
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.role-section p {
+  color: #68707d;
+  max-width: 600px;
+  margin: 25px auto;
+  line-height: 1.6;
+}
+
+footer {
+  padding: 35px 8%;
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px solid #e5e7eb;
+  background: white;
+}
+
+footer p {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+@media (max-width: 900px) {
+  .hero {
+    flex-direction: column;
+  }
+
+  .hero-card {
+    width: 100%;
+    max-width: 500px;
+  }
+
+  .job-grid,
+  .steps {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .nav-links {
+    display: none;
+  }
+
+  .hero {
+    padding: 60px 6%;
+  }
+
+  .hero h1 {
+    font-size: 45px;
+  }
+
+  .stats,
+  footer {
+    flex-direction: column;
+  }
+
+  .job-grid,
+  .steps {
+    grid-template-columns: 1fr;
+  }
+}
