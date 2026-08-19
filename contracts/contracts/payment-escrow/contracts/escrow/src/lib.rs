@@ -130,3 +130,5 @@ impl PaymentEscrow {
             .get(&job_id)
     }
 }
+#[cfg(test)]
+mod test;
