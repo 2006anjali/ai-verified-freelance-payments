@@ -3,6 +3,7 @@ import {
   requestAccess,
   getAddress,
   getNetwork,
+  signTransaction,
 } from '@stellar/freighter-api'
 
 export async function connectWallet() {
@@ -21,4 +22,20 @@ export async function connectWallet() {
     address: addressResult.address,
     network: networkResult.network,
   }
+}
+
+export async function signWalletTransaction(xdr, address) {
+  const networkResult = await getNetwork()
+
+  const result = await signTransaction(xdr, {
+    network: networkResult.network,
+    networkPassphrase: networkResult.networkPassphrase,
+    address,
+  })
+
+  if (result.error) {
+    throw new Error(result.error)
+  }
+
+  return result.signedTxXdr
 }
