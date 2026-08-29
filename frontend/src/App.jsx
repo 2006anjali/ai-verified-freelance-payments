@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { connectWallet, signWalletTransaction } from './stellar/wallet'
-import { getJob, submitWork } from './stellar/client'
+import { getJob, submitWork, verifyJob } from './stellar/client'
 import { createJob } from './stellar/client'
 import './App.css'
 
@@ -222,16 +222,33 @@ function App() {
                   setError('')
 
                   const result = await submitWork({
-                    walletAddress: wallet.address,
-                    submissionHash: 'test-submission-001',
-                    signTransaction: signWalletTransaction,
-                  })
+  walletAddress: wallet.address,
+  submissionHash: 'test-submission-001',
+  signTransaction: signWalletTransaction,
+})
 
-                  setJobMessage(
-                    result.hash
-                      ? `Work submitted: ${result.hash}`
-                      : `Work status: ${result.status}`
-                  )
+setJobMessage(
+  result.hash
+    ? `Work submitted: ${result.hash}`
+    : `Work status: ${result.status}`
+)
+
+// Verify the submitted work
+const verificationResult = await verifyJob({
+  walletAddress: wallet.address,
+  verificationResult: true,
+  signTransaction: signWalletTransaction,
+})
+
+setJobMessage(
+  verificationResult.hash
+    ? `Work submitted and verified: ${verificationResult.hash}`
+    : 'Work submitted and verified successfully'
+)
+
+// Reload job data from Stellar
+const updatedJob = await getJob()
+setJob(updatedJob)
                 } catch (err) {
                   console.error(err)
                   setError(err.message || 'Submit work failed')
