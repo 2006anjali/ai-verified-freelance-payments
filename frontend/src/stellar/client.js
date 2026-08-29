@@ -151,3 +151,37 @@ export async function submitWork({
 
   return server.sendTransaction(signedTransaction)
 }
+export async function verifyJob({
+  verificationResult,
+  walletAddress,
+  signTransaction,
+}) {
+  const account = await server.getAccount(walletAddress)
+
+  const operation = jobContract.call(
+    'verify_job',
+    nativeToScVal(verificationResult, { type: 'bool' }),
+  )
+
+  const transaction = new TransactionBuilder(account, {
+    fee: BASE_FEE,
+    networkPassphrase,
+  })
+    .addOperation(operation)
+    .setTimeout(30)
+    .build()
+
+  const preparedTransaction = await server.prepareTransaction(transaction)
+
+  const signedXdr = await signTransaction(
+    preparedTransaction.toEnvelope().toXDR('base64'),
+    walletAddress,
+  )
+
+  const signedTransaction = TransactionBuilder.fromXDR(
+    signedXdr,
+    networkPassphrase,
+  )
+
+  return server.sendTransaction(signedTransaction)
+}
