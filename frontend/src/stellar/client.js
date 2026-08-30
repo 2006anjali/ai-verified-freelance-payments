@@ -183,5 +183,11 @@ export async function verifyJob({
     networkPassphrase,
   )
 
-  return server.sendTransaction(signedTransaction)
+const response = await server.sendTransaction(signedTransaction)
+
+if (!response.hash) {
+  throw new Error('No transaction hash returned')
+}
+
+return response
 }
