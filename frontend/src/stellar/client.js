@@ -189,5 +189,26 @@ if (!response.hash) {
   throw new Error('No transaction hash returned')
 }
 
+let status = 'PENDING'
+
+for (let i = 0; i < 30; i++) {
+  const transaction = await server.getTransaction(response.hash)
+
+  if (transaction.status === 'SUCCESS') {
+    status = 'SUCCESS'
+    break
+  }
+
+  if (transaction.status === 'FAILED') {
+    throw new Error('Verification transaction failed')
+  }
+
+  await new Promise(resolve => setTimeout(resolve, 2000))
+}
+
+if (status !== 'SUCCESS') {
+  throw new Error('Verification transaction confirmation timed out')
+}
+
 return response
 }
