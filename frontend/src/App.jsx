@@ -240,14 +240,20 @@ const verificationResult = await verifyJob({
   signTransaction: signWalletTransaction,
 })
 
+console.log('VERIFY TRANSACTION:', verificationResult)
+
 setJobMessage(
   verificationResult.hash
     ? `Work submitted and verified: ${verificationResult.hash}`
     : 'Work submitted and verified successfully'
 )
 
-// Reload job data from Stellar
+await new Promise(resolve => setTimeout(resolve, 3000))
+
 const updatedJob = await getJob()
+
+console.log('UPDATED JOB FROM CHAIN:', updatedJob)
+
 setJob(updatedJob)
                 } catch (err) {
                   console.error(err)
