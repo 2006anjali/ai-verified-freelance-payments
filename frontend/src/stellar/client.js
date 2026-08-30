@@ -171,7 +171,8 @@ export async function verifyJob({
     .setTimeout(30)
     .build()
 
-  const preparedTransaction = await server.prepareTransaction(transaction)
+  const preparedTransaction =
+    await server.prepareTransaction(transaction)
 
   const signedXdr = await signTransaction(
     preparedTransaction.toEnvelope().toXDR('base64'),
@@ -183,32 +184,30 @@ export async function verifyJob({
     networkPassphrase,
   )
 
-const response = await server.sendTransaction(signedTransaction)
+  const response = await server.sendTransaction(signedTransaction)
 
-if (!response.hash) {
-  throw new Error('No transaction hash returned')
-}
-
-let status = 'PENDING'
-
-for (let i = 0; i < 30; i++) {
-  const transaction = await server.getTransaction(response.hash)
-
-  if (transaction.status === 'SUCCESS') {
-    status = 'SUCCESS'
-    break
+  if (!response.hash) {
+    throw new Error('No transaction hash returned')
   }
 
-  if (transaction.status === 'FAILED') {
-    throw new Error('Verification transaction failed')
+  // Wait for Stellar transaction confirmation
+  for (let i = 0; i < 30; i++) {
+    const result = await server.getTransaction(response.hash)
+
+    if (result.status === 'SUCCESS') {
+      console.log('VERIFY TRANSACTION SUCCESS:', response.hash)
+      return response
+    }
+
+    if (result.status === 'FAILED') {
+      console.error('VERIFY TRANSACTION FAILED:', result)
+      throw new Error('Verification transaction failed')
+    }
+
+    await new Promise(resolve => setTimeout(resolve, 2000))
   }
 
-  await new Promise(resolve => setTimeout(resolve, 2000))
-}
-
-if (status !== 'SUCCESS') {
-  throw new Error('Verification transaction confirmation timed out')
-}
-
-return response
+  throw new Error(
+    'Verification transaction confirmation timed out'
+  )
 }
