@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+
 import {
   connectWallet,
   signWalletTransaction,
@@ -31,11 +32,14 @@ function App() {
   const [jobMessage, setJobMessage] = useState('')
   const [submittingWork, setSubmittingWork] = useState(false)
 
+  // Load job from Stellar
   useEffect(() => {
     async function loadJob() {
       try {
         const result = await getJob()
+
         console.log('INITIAL JOB FROM CHAIN:', result)
+
         setJob(result)
       } catch (err) {
         console.error('Failed to load job:', err)
@@ -45,6 +49,31 @@ function App() {
     loadJob()
   }, [])
 
+  // Connect wallet
+  async function handleConnect() {
+    setConnecting(true)
+    setError('')
+    setJobMessage('')
+
+    try {
+      const result = await connectWallet()
+
+      console.log('CONNECTED WALLET:', result)
+
+      setWallet(result)
+    } catch (err) {
+      console.error('CONNECT ERROR:', err)
+
+      setError(
+        err.message ||
+          'Unable to connect wallet'
+      )
+    } finally {
+      setConnecting(false)
+    }
+  }
+
+  // Create Job
   async function handleCreateJob(event) {
     event.preventDefault()
 
@@ -54,13 +83,16 @@ function App() {
     }
 
     setCreatingJob(true)
-    setJobMessage('')
     setError('')
+    setJobMessage('Creating job on Stellar...')
 
     try {
       const deadline = Math.floor(
         Date.now() / 1000 +
-          Number(jobForm.deadlineDays) * 24 * 60 * 60
+          Number(jobForm.deadlineDays) *
+            24 *
+            60 *
+            60
       )
 
       const result = await createJob({
@@ -72,7 +104,10 @@ function App() {
         signTransaction: signWalletTransaction,
       })
 
-      console.log('CREATE JOB TRANSACTION:', result)
+      console.log(
+        'CREATE JOB TRANSACTION:',
+        result
+      )
 
       setJobMessage(
         result.hash
@@ -82,76 +117,146 @@ function App() {
 
       setShowPostJob(false)
 
-      // Refresh job after creation
+      // Refresh blockchain job
       setTimeout(async () => {
-       try {
-  const updatedJob = await getJob()
-  console.log('UPDATED JOB FROM CHAIN:', updatedJob)
-  setJob(updatedJob)
-} catch (refreshError) {
-  console.warn('Could not refresh job:', refreshError)
-}
+        try {
+          const updatedJob = await getJob()
+
+          console.log(
+            'UPDATED JOB FROM CHAIN:',
+            updatedJob
+          )
+
+          setJob(updatedJob)
+        } catch (refreshError) {
+          console.warn(
+            'Could not refresh job:',
+            refreshError
+          )
+        }
       }, 3000)
     } catch (err) {
-      console.error('CREATE JOB ERROR:', err)
-      setError(err.message || 'Failed to create job')
+      console.error(
+        'CREATE JOB ERROR:',
+        err
+      )
+
+      setError(
+        err.message ||
+          'Failed to create job'
+      )
     } finally {
       setCreatingJob(false)
     }
   }
 
-  async function handleConnect() {
-    setConnecting(true)
-    setError('')
-
-    try {
-      const result = await connectWallet()
-      console.log('CONNECTED WALLET:', result)
-      setWallet(result)
-    } catch (err) {
-      console.error('CONNECT ERROR:', err)
-      setError(err.message || 'Unable to connect wallet')
-    } finally {
-      setConnecting(false)
-    }
-  }
-
+  // Submit Work + Verify
   async function handleSubmitWork() {
-    console.log('SUBMIT BUTTON CLICKED')
+    console.log(
+      'SUBMIT BUTTON CLICKED'
+    )
 
     if (!wallet) {
-      setError('Please connect your wallet first.')
+      setError(
+        'Please connect your wallet first.'
+      )
       return
     }
 
     try {
       setSubmittingWork(true)
       setError('')
-      setJobMessage('Submitting work...')
-
-      // STEP 1: Submit work
-      const result = await submitWork({
-        walletAddress: wallet.address,
-        submissionHash: 'test-submission-001',
-        signTransaction: signWalletTransaction,
-      })
-
-      console.log('SUBMIT TRANSACTION:', result)
-
       setJobMessage(
-        result.hash
-          ? `Work submitted: ${result.hash}`
-          : `Work status: ${result.status}`
+        'Submitting work...'
       )
 
-      // STEP 2: Verify work
-      const verificationResult = await verifyJob({
+      // --------------------------------
+      // STEP 1: Submit work
+      // --------------------------------
+
+      const result = await submitWork({
         walletAddress: wallet.address,
-        verificationResult: true,
-        signTransaction: signWalletTransaction,
+        submissionHash:
+          'test-submission-001',
+        signTransaction:
+          signWalletTransaction,
       })
 
-      console.log('VERIFY TRANSACTION:', verificationResult)
+      console.log(
+        'SUBMIT TRANSACTION:',
+        result
+      )
+
+      if (result.hash) {
+        setJobMessage(
+          `Work submitted: ${result.hash}`
+        )
+      } else {
+        setJobMessage(
+          `Work status: ${result.status}`
+        )
+      }
+
+      // --------------------------------
+      // STEP 2: Get latest job state
+      // --------------------------------
+
+      let latestJob = null
+
+      try {
+        latestJob = await getJob()
+
+        console.log(
+          'JOB AFTER SUBMISSION:',
+          latestJob
+        )
+
+        setJob(latestJob)
+      } catch (refreshError) {
+        console.warn(
+          'Could not refresh job after submission:',
+          refreshError
+        )
+      }
+
+      // --------------------------------
+      // STEP 3: Verify ONLY if needed
+      // --------------------------------
+
+      if (
+        latestJob &&
+        latestJob.verified === true
+      ) {
+        console.log(
+          'JOB IS ALREADY VERIFIED. SKIPPING verify_job.'
+        )
+
+        setJobMessage(
+          'Work submitted successfully. Job is already verified on Stellar.'
+        )
+
+        return
+      }
+
+      // If verification result is already true
+      // but verified field is not true, verify it.
+      console.log(
+        'Calling verify_job because job is not verified yet.'
+      )
+
+      const verificationResult =
+        await verifyJob({
+          walletAddress:
+            wallet.address,
+          verificationResult: true,
+          signTransaction:
+            signWalletTransaction,
+        })
+
+      console.log(
+        'VERIFY TRANSACTION:',
+        verificationResult
+      )
 
       setJobMessage(
         verificationResult.hash
@@ -159,20 +264,33 @@ function App() {
           : 'Work submitted and verified successfully'
       )
 
-      // STEP 3: Refresh job from blockchain
-      
+      // --------------------------------
+      // STEP 4: Final blockchain refresh
+      // --------------------------------
 
       try {
-        const updatedJob = await getJob()
+        const updatedJob =
+          await getJob()
 
-        console.log('UPDATED JOB FROM CHAIN:', updatedJob)
-console.log('VERIFIED FIELD:', updatedJob?.verified)
-console.log('VERIFICATION RESULT:', updatedJob?.verification_result)
+        console.log(
+          'FINAL JOB FROM CHAIN:',
+          updatedJob
+        )
 
-setJob(updatedJob)
+        console.log(
+          'VERIFIED FIELD:',
+          updatedJob?.verified
+        )
+
+        console.log(
+          'VERIFICATION RESULT:',
+          updatedJob?.verification_result
+        )
+
+        setJob(updatedJob)
       } catch (refreshError) {
         console.warn(
-          'Could not refresh job:',
+          'Could not refresh final job:',
           refreshError
         )
       }
@@ -194,6 +312,8 @@ setJob(updatedJob)
   return (
     <div className="app">
 
+      {/* NAVBAR */}
+
       <header className="navbar">
 
         <div className="logo">
@@ -201,9 +321,17 @@ setJob(updatedJob)
         </div>
 
         <nav>
-          <a href="#jobs">Jobs</a>
-          <a href="#how">How it works</a>
-          <a href="#about">About</a>
+          <a href="#jobs">
+            Jobs
+          </a>
+
+          <a href="#how">
+            How it works
+          </a>
+
+          <a href="#about">
+            About
+          </a>
         </nav>
 
         <button
@@ -222,11 +350,15 @@ setJob(updatedJob)
 
       </header>
 
+      {/* ERROR */}
+
       {error && (
         <div className="wallet-error">
           {error}
         </div>
       )}
+
+      {/* SUCCESS */}
 
       {jobMessage && (
         <div className="wallet-success">
@@ -235,6 +367,8 @@ setJob(updatedJob)
       )}
 
       <main>
+
+        {/* HERO */}
 
         <section className="hero">
 
@@ -247,14 +381,17 @@ setJob(updatedJob)
             <h1>
               Freelance work.
               <br />
-              <span>Verified & paid.</span>
+              <span>
+                Verified & paid.
+              </span>
             </h1>
 
             <p>
-              AI-verified freelance work with secure
-              Stellar payments. Complete jobs, verify
-              your work, and get paid without unnecessary
-              intermediaries.
+              AI-verified freelance work
+              with secure Stellar payments.
+              Complete jobs, verify your
+              work, and get paid without
+              unnecessary intermediaries.
             </p>
 
             <div className="hero-actions">
@@ -282,32 +419,55 @@ setJob(updatedJob)
             <div className="stats">
 
               <div>
-                <strong>100%</strong>
-                <span>On-chain payments</span>
+                <strong>
+                  100%
+                </strong>
+
+                <span>
+                  On-chain payments
+                </span>
               </div>
 
               <div>
-                <strong>AI</strong>
-                <span>Work verification</span>
+                <strong>
+                  AI
+                </strong>
+
+                <span>
+                  Work verification
+                </span>
               </div>
 
               <div>
-                <strong>24/7</strong>
-                <span>Payment escrow</span>
+                <strong>
+                  24/7
+                </strong>
+
+                <span>
+                  Payment escrow
+                </span>
               </div>
 
             </div>
 
           </div>
 
+          {/* JOB CARD */}
+
           <div className="job-card">
 
             <div className="card-top">
 
-              <span>Active Job</span>
+              <span>
+                Active Job
+              </span>
 
-              <span className="status">
-                ● In Progress
+              <span
+                className="status"
+              >
+                {job?.verified
+                  ? '● Verified'
+                  : '● In Progress'}
               </span>
 
             </div>
@@ -327,30 +487,44 @@ setJob(updatedJob)
             <div className="job-details">
 
               <div>
-                <span>Budget</span>
+
+                <span>
+                  Budget
+                </span>
 
                 <strong>
                   {job
                     ? `${job.amount} XLM`
                     : 'Loading...'}
                 </strong>
+
               </div>
 
               <div>
-                <span>Deadline</span>
+
+                <span>
+                  Deadline
+                </span>
 
                 <strong>
                   {job
                     ? `${job.deadline}`
                     : 'Loading...'}
                 </strong>
+
               </div>
 
             </div>
 
             <div className="verified">
-              ✓ AI verification enabled
+
+              {job?.verified
+                ? '✓ Work verified on Stellar'
+                : '✓ AI verification enabled'}
+
             </div>
+
+            {/* VIEW JOB */}
 
             <button
               className="view-btn"
@@ -367,24 +541,33 @@ setJob(updatedJob)
                   `ON-CHAIN JOB
 
 Requirements: ${
-                    job.requirements ?? 'Loading'
+                    job.requirements ??
+                    'Loading'
                   }
 
 Budget: ${
-                    job.amount ?? 'Loading'
+                    job.amount ??
+                    'Loading'
                   } XLM
 
 Deadline: ${
-                    job.deadline ?? 'Loading'
+                    job.deadline ??
+                    'Loading'
                   }
 
 Verified: ${
-                    job.verified ?? 'Loading'
+                    job.verified ??
+                    false
                   }
 
 Verification Result: ${
                     job.verification_result ??
-                    'Loading'
+                    false
+                  }
+
+Submission Hash: ${
+                    job.submission_hash ??
+                    'None'
                   }
 
 Escrow Status: ${
@@ -397,20 +580,29 @@ Escrow Status: ${
               View Job
             </button>
 
-            {/* ONLY ONE SUBMIT BUTTON */}
+            {/* SUBMIT WORK */}
+
             <button
               className="primary-btn"
-              onClick={handleSubmitWork}
-              disabled={submittingWork}
+              onClick={
+                handleSubmitWork
+              }
+              disabled={
+                submittingWork
+              }
             >
               {submittingWork
                 ? 'Submitting...'
-                : 'Submit Work'}
+                : job?.verified
+                  ? 'Submit Work Again'
+                  : 'Submit Work'}
             </button>
 
           </div>
 
         </section>
+
+        {/* POST JOB */}
 
         {showPostJob && (
 
@@ -444,7 +636,9 @@ Escrow Status: ${
               </div>
 
               <form
-                onSubmit={handleCreateJob}
+                onSubmit={
+                  handleCreateJob
+                }
                 className="job-form"
               >
 
@@ -454,11 +648,14 @@ Escrow Status: ${
                   <input
                     type="number"
                     min="1"
-                    value={jobForm.amount}
+                    value={
+                      jobForm.amount
+                    }
                     onChange={(e) =>
                       setJobForm({
                         ...jobForm,
-                        amount: e.target.value,
+                        amount:
+                          e.target.value,
                       })
                     }
                     required
@@ -471,7 +668,9 @@ Escrow Status: ${
 
                   <input
                     type="text"
-                    value={jobForm.requirements}
+                    value={
+                      jobForm.requirements
+                    }
                     onChange={(e) =>
                       setJobForm({
                         ...jobForm,
@@ -508,7 +707,9 @@ Escrow Status: ${
                 <button
                   type="submit"
                   className="primary-btn"
-                  disabled={creatingJob}
+                  disabled={
+                    creatingJob
+                  }
                 >
                   {creatingJob
                     ? 'Creating job...'
@@ -522,6 +723,8 @@ Escrow Status: ${
           </section>
 
         )}
+
+        {/* MARKETPLACE */}
 
         <section
           id="jobs"
@@ -571,6 +774,8 @@ Escrow Status: ${
 
         </section>
 
+        {/* PROCESS */}
+
         <section
           id="how"
           className="process-section"
@@ -614,6 +819,8 @@ Escrow Status: ${
 
         </section>
 
+        {/* CTA */}
+
         <section className="cta-section">
 
           <span className="section-label">
@@ -626,24 +833,35 @@ Escrow Status: ${
 
           <div className="role-buttons">
 
-            <button onClick={handleConnect}>
+            <button
+              onClick={
+                handleConnect
+              }
+            >
               I'm a Freelancer
             </button>
 
-            <button onClick={handleConnect}>
+            <button
+              onClick={
+                handleConnect
+              }
+            >
               I'm a Client
             </button>
 
           </div>
 
           <p>
-            Find verified jobs, complete work and
-            receive secure Stellar payments.
+            Find verified jobs, complete
+            work and receive secure Stellar
+            payments.
           </p>
 
         </section>
 
       </main>
+
+      {/* FOOTER */}
 
       <footer id="about">
 
@@ -652,8 +870,8 @@ Escrow Status: ${
         </div>
 
         <p>
-          AI-verified freelance payments powered
-          by Stellar.
+          AI-verified freelance payments
+          powered by Stellar.
         </p>
 
       </footer>
@@ -661,6 +879,9 @@ Escrow Status: ${
     </div>
   )
 }
+
+
+// Marketplace Job Card
 
 function JobCard({
   category,
@@ -720,6 +941,9 @@ Status: Verified`
     </article>
   )
 }
+
+
+// Process Step
 
 function Step({
   number,
