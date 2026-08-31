@@ -85,13 +85,20 @@ impl Contract {
 
     pub fn verify_job(
         env: Env,
+        client: Address,
         verification_result: bool,
     ) {
+        client.require_auth();
+
         let mut job: Job = env
             .storage()
             .instance()
             .get(&DataKey::Job)
             .unwrap();
+
+        if client != job.client {
+            panic!("Unauthorized client");
+        }
 
         if job.verified {
             panic!("Already verified");
